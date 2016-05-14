@@ -1,0 +1,92 @@
+/**
+ * 原文链接：http://www.micmiu.com/lang/java/java-check-chinese/
+ * 本demo，是依托原文中前辈的指导思想和程序范本，利用空暇学习相关知识的实践总结，并依托github备忘
+ * 如有任何问题，望不吝赐教：865568125@qq.com
+ */
+package com.zs;
+
+import java.util.regex.Pattern;
+
+/**
+ * Java判断一个字符串是否有中文一般情况是利用Unicode编码(CJK统一汉字的编码区间：0x4e00–0x9fbb)的正则来做判断，
+ * 但是其实这个区间来判断中文不是非常精确，因为有些中文的标点符号比如：，。等等是不能识别的。
+ */
+public class JudgeChinese {
+	public void mainTest() {
+		String[] strArr = new String[] { "www.micmiu.com",
+				"!@#$%^&*()_+{}[]|\"'?/:;<>,.", "！￥……（）——：；“”‘’《》，。？、", "王",
+				"やめて", "韩佳人", "???" };
+		for (String str : strArr) {
+			System.out.println("===========> 测试字符串：" + str);
+			System.out.println("正则判断结果：" + isChineseByREG(str) + " -- "
+					+ isChineseByName(str));
+			System.out.println("Unicode判断结果 ：" + isChinese(str));
+			System.out.println("详细判断列表：");
+			char[] ch = str.toCharArray();
+			for (int i = 0; i < ch.length; i++) {
+				char c = ch[i];
+				System.out.println(c + " --> " + (isChinese(c) ? "是" : "否"));
+			}
+		}
+	}
+
+	// 完整的判断中文汉字和符号
+	private boolean isChinese(String strName) {
+		char[] ch = strName.toCharArray();
+		for (int i = 0; i < ch.length; i++) {
+			char c = ch[i];
+			if (isChinese(c)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// 根据Unicode编码完美的判断中文汉字和符号
+	private boolean isChinese(char c) {
+		Character.UnicodeBlock ub = Character.UnicodeBlock.of(c);
+		if ( // 4E00-9FBF：CJK 统一表意符号
+		ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+		// F900-FAFF：CJK 兼容象形文字
+				|| ub == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS
+				// 3400-4DBF：CJK 统一表意符号扩展 A
+				|| ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
+				// U+20000-U+2FFFD:扩展B区使用了辅助平面来摆放汉字,辅助平面字符要用4字节来储存
+				|| ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B
+				// 3000-303F：CJK 符号和标点
+				|| ub == Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION
+				// FF00-FFEF：半型及全型形式
+				|| ub == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS
+				// 2000-206F：常用标点
+				|| ub == Character.UnicodeBlock.GENERAL_PUNCTUATION) {
+			return true;
+		}
+		return false;
+	}
+
+	// 只能判断部分CJK字符（CJK统一汉字）
+	private boolean isChineseByREG(String str) {
+		if (str == null) {
+			return false;
+		}
+		Pattern pattern = Pattern.compile("[\\u4E00-\\u9FBF]+");
+		return pattern.matcher(str.trim()).find();
+	}
+
+	// 只能判断部分CJK字符（CJK统一汉字）
+	private boolean isChineseByName(String str) {
+		if (str == null) {
+			return false;
+		}
+		/**
+		 * 20160514zs unicode分类：Cn（UNASSIGNED：未定义）
+		 * http://www.cnblogs.com/lcf/articles/807523.html 另外：
+		 * 原代码正则为 String reg = "\\p{InCJK Unified Ideographs}&&\\P{Cn}";不正确
+		 */
+		// 大小写不同：\\p 表示包含，\\P 表示不包含
+		// p{Cn} 的意思为 Unicode 中未被定义字符的编码，\\P{Cn} 就表示 Unicode中非未定义（即：已经被定义)字符的编码
+		String reg = "\\p{InCJK Unified Ideographs}";
+		Pattern pattern = Pattern.compile(reg);
+		return pattern.matcher(str.trim()).find();
+	}
+}
