@@ -1,0 +1,8 @@
+package com.zs;
+
+public class MainTestDemo {
+	public static void main(String[] args) {
+		JudgeChinese judgeChinese = new JudgeChinese();
+		judgeChinese.mainTest();
+	}
+}
